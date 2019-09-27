@@ -2,9 +2,9 @@
 
 const root = document.getElementById('root');
 const game = {
-    'board': [],
+    'arrayBoard': [],
     'lengthOfBoard': 8,
-    'maxPlayers': 2, // just for a multiplayer game
+    'maxPlayers': 2,
     'symbols': ['X', 'O'],
     'players': [
         {
@@ -19,47 +19,43 @@ const game = {
         }
     ],
     'currentPlayer': 0,
-    'initPlayer': () => {
+    'choiceInitialPlayer': () => {
 
         game.currentPlayer = Math.floor(Math.random() * game.maxPlayers);
 
     },
-    'createBoard': () => {
+    'createArrayBoard': () => {
 
-        while(game.board.length <= game.lengthOfBoard){
+        while(game.arrayBoard.length <= game.lengthOfBoard){
 
-            game.board.push('');
+            game.arrayBoard.push('');
 
         }
 
     },
     'renderBoardInNavigator': () => {
 
-        let content = '';
+        let div = document.createElement('div');
+
+        div.classList.add('board');
 
         for(let i = 0; i <= game.lengthOfBoard; i++){
 
-            content += '<span class="table" ' +
+            div.innerHTML += '<span class="table" ' +
             `onclick="game.makePlay(${i})"></span>`;
 
         }
 
-        root.innerHTML = content;
+        root.appendChild(div);
 
     },
     'makePlay': (position) => {
-
-        // check if the field is empty
-        // check if the player was victory
-        // check if gameover is true
         
-        if(game.board[position] === '' && game.isGameOver === false){
+        if(game.arrayBoard[position] === '' && game.isGameOver === false){
 
             game.plays += 1;
 
-            console.log('Jogada: ' + game.plays);
-
-            game.board[position] = game.currentPlayer;
+            game.arrayBoard[position] = game.symbols[game.currentPlayer];
 
             game.whiteInBoard(position, game.symbols[game.currentPlayer]);
 
@@ -93,14 +89,14 @@ const game = {
 
     },
     'start': () => {
-
-        game.initPlayer(); // choice ramdomic the player
-        game.createBoard(); // create a array with nine positions
-        game.renderBoardInNavigator(); // render board on navigator '-'
+ 
+        game.renderLogo();
         game.renderScoreboard();
-        game.renderButtonRestart(); // yeah, you know what this function make...
-
-        console.log('Fist player to play: ' + game.currentPlayer);
+        game.renderBoardInNavigator();
+        game.renderContainerResult();
+        game.renderButtonRestart();
+        game.choiceInitialPlayer();
+        game.createArrayBoard();
 
     },
     'passToWin': [
@@ -115,56 +111,52 @@ const game = {
     ],
     'checkPass': () => {
 
+        let result = document.getElementById('result');
+
         if(game.plays === 9){
 
-            alert('draaaaaaaaaaaaaaaaaw!');
-
-            game.restart();
+            result.innerHTML = "Draaaaaaw!";
 
         }else{
 
             game.passToWin.forEach(function(index){
 
-                let som = game.board[index[0]] + game.board[index[1]] + 
-                game.board[index[2]];
+                if(game.arrayBoard[index[0]] === game.symbols[game.currentPlayer] &&
+                    game.arrayBoard[index[1]] === game.symbols[game.currentPlayer] &&
+                    game.arrayBoard[index[2]] === game.symbols[game.currentPlayer]){
 
-                if(som === 3){
+                        game.isGameOver = true;
+                        game.players[game.currentPlayer].victories += 1;
+                        game.changeColor(index[0], index[1], index[2]);
 
-                    game.isGameOver = true;
-                    game.players[game.currentPlayer].victories +=1;
-                    game.changeColor(index[0], index[1], index[2]);
+                        result.innerHTML = `${game.symbols[game.currentPlayer]} wins!`;
 
-
-                }else if(som === 0){
-
-                    game.isGameOver = true;
-                    game.players[game.currentPlayer].victories +=1;
-                    game.changeColor(index[0], index[1], index[2]);
-
-                }
+                    }
 
             });
-
-            // why? yeah, I don't know, after all it's just numbers xD (it make sense to me)
 
         }
 
     },
     'restart': () => {
 
+        root.innerHTML = '';
         game.isGameOver = false;
-        game.board.fill(''); // clean the content of array;
-        game.plays = 0; // restart the count of plays
-        game.start(); // create all content again
+        game.arrayBoard.fill(''); 
+        game.plays = 0; 
+        game.start();
 
     },
     'renderButtonRestart': () => {
 
+        let container = document.createElement('div');
         let button = document.createElement('button');
         let content = document.createTextNode('Restart Game');
 
+        container.classList.add('container');
         button.classList.add('btn');
         button.id = 'restart-game';
+        button.title = "Restart Game";
         button.appendChild(content);
         button.onclick = () => {
 
@@ -172,7 +164,9 @@ const game = {
 
         }
 
-        root.appendChild(button);
+        container.appendChild(button);
+
+        root.appendChild(container);
 
     },
     'changeColor': (positionOne, positionTwo, positionThree) => {
@@ -195,17 +189,14 @@ const game = {
         game.players.forEach(function(element){
 
             let div = document.createElement('div');
-            let playerName = document.createElement('span');
-            let playerVictories = document.createElement('span');
+            let playerData = document.createElement('span');
 
-            playerName.classList.add('player-name');
-            playerVictories.classList.add('player-victories');
+            div.classList.add('player-data');
+            playerData.classList.add('player-data');
 
-            playerName.innerHTML = `Name: ${element.name}`;
-            playerVictories.innerHTML = `Victories: ${element.victories}`;
+            playerData.innerHTML = `${element.name}: ${element.victories}`;
 
-            div.appendChild(playerName);
-            div.appendChild(playerVictories);
+            div.appendChild(playerData);
             scoreboard.appendChild(div);
 
         });
@@ -213,6 +204,25 @@ const game = {
 
         root.appendChild(scoreboard);
 
+
+    },
+    'renderContainerResult': () => {
+
+        let div = document.createElement('div');
+
+        div.id = 'result';
+
+        root.appendChild(div);
+
+    },
+    'renderLogo': () => {
+
+        let h1 = document.createElement('h1');
+    
+        h1.classList.add('logo');
+        h1.innerHTML = "Tic Tac Toe";
+
+        root.appendChild(h1);
 
     }
 };
